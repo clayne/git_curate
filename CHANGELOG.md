@@ -1,5 +1,9 @@
 # Changelog
 
+### v2.0.2
+
+* Fix handling of branch names containing parentheses
+
 ### v2.0.1
 
 * Dependency version upgrades
