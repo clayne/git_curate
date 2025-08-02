@@ -27,6 +27,22 @@ describe GitCurate::Branch do
     end
   end
 
+  describe "#command_quoted_proper_name" do
+    it "returns a single-quoted branch name, sans any leading '* ' or '+ '" do
+      {
+        "some-branch"            => "'some-branch'",
+        "  \t some-other-branch" => "'some-other-branch'",
+        "  * another-one"        => "'another-one'",
+        "* and-this-one"         => "'and-this-one'",
+        "+ and-this-one-here"    => "'and-this-one-here'",
+      }.each do |raw_name, expected_proper_name|
+
+        branch = GitCurate::Branch.new(raw_name, merged: true, upstream_info: "whatever")
+        expect(branch.command_quoted_proper_name).to eq(expected_proper_name)
+      end
+    end
+  end
+
   describe "#current?" do
     subject { branch.current? }
     let(:branch) { GitCurate::Branch.new(raw_name, merged: false, upstream_info: "whatever") }
@@ -89,7 +105,7 @@ describe GitCurate::Branch do
   describe "#last_author" do
     it "returns the output from calling `git log -n1 --format=format:%an` with the proper name of the branch" do
       branch = GitCurate::Branch.new("* feature/something", merged: false, upstream_info: "whatever")
-      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" feature/something --)
+      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" 'feature/something' --)
       allow(GitCurate::Util).to \
         receive(:command_output).
         with(command).
@@ -102,7 +118,7 @@ describe GitCurate::Branch do
   describe "#hash" do
     it "returns the output from calling `git log -n1 --format=format:%h` with the proper name of the branch" do
       branch = GitCurate::Branch.new("* feature/something", merged: false, upstream_info: "whatever")
-      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" feature/something --)
+      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" 'feature/something' --)
       allow(GitCurate::Util).to \
         receive(:command_output).
         with(command).
@@ -116,7 +132,7 @@ describe GitCurate::Branch do
     it "returns the output from calling `git log -n1 --date=short --format=format:%cd` with "\
       "the proper name of the branch" do
       branch = GitCurate::Branch.new("* feature/something", merged: true, upstream_info: "whatever")
-      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" feature/something --)
+      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" 'feature/something' --)
       allow(GitCurate::Util).to \
         receive(:command_output).
         with(command).
@@ -130,7 +146,7 @@ describe GitCurate::Branch do
     it "returns the output from calling `git log -n1 --format=format:%s` with "\
       "the proper name of the branch" do
       branch = GitCurate::Branch.new("* feature/something", merged: true, upstream_info: "whatever")
-      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" feature/something --)
+      command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" 'feature/something' --)
       allow(GitCurate::Util).to \
         receive(:command_output).
         with(command).
@@ -147,7 +163,7 @@ describe GitCurate::Branch do
       branch_0 = GitCurate::Branch.new("some-branch", merged: false, upstream_info: "whatever")
       branch_1 = GitCurate::Branch.new("* some-other-branch", merged: true, upstream_info: "whatever")
       allow(GitCurate::Util).to receive(:command_output)
-      expect(GitCurate::Util).to receive(:command_output).with("git branch -D some-branch some-other-branch --")
+      expect(GitCurate::Util).to receive(:command_output).with("git branch -D 'some-branch' 'some-other-branch' --")
       GitCurate::Branch.delete_multi(branch_0, branch_1)
     end
   end

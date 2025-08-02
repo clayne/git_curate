@@ -21,6 +21,10 @@ module GitCurate
       @proper_name ||= @raw_name.lstrip.sub(CURRENT_BRANCH_REGEX, '')
     end
 
+    def command_quoted_proper_name
+      "'#{proper_name}'"
+    end
+
     def current?
       @current ||= (@raw_name =~ CURRENT_BRANCH_REGEX)
     end
@@ -104,7 +108,7 @@ module GitCurate
     private
 
     def self.delete_multi(*branches)
-      Util.command_output("git branch -D #{branches.map(&:proper_name).join(" ")} --")
+      Util.command_output("git branch -D #{branches.map(&:command_quoted_proper_name).join(" ")} --")
     end
 
     # raw_name should start in "* " if the current branch on this worktree, "+ " if it's the current
@@ -119,7 +123,7 @@ module GitCurate
       @last_commit ||= begin
         # For Windows compatibility we need double quotes around the format string, as well as spaces
         # between the placeholders.
-        command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" #{proper_name} --)
+        command = %Q(git log -n1 --date=short --format=format:"%cd %n %h %n %an %n %s" #{command_quoted_proper_name} --)
         Commit.new(*Util.command_to_a(command))
       end
     end
